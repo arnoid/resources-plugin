@@ -1,0 +1,1 @@
+# libgdx-resources-plugin
