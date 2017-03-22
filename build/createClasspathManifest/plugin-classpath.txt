@@ -1,0 +1,8 @@
+/Users/sergii/work/workspace/damoclus-mission/resources-plugin/build/classes/main
+/Users/sergii/work/workspace/damoclus-mission/resources-plugin/build/resources/main
+/Users/sergii/.gradle/caches/3.3/generated-gradle-jars/gradle-api-3.3.jar
+/usr/local/Cellar/gradle/3.3/libexec/lib/groovy-all-2.4.7.jar
+/usr/local/Cellar/gradle/3.3/libexec/lib/gradle-installation-beacon-3.3.jar
+/Users/sergii/.gradle/caches/modules-2/files-2.1/xpp3/xpp3/1.1.4c/9b988ea84b9e4e9f1874e390ce099b8ac12cfff5/xpp3-1.1.4c.jar
+/Users/sergii/.gradle/caches/modules-2/files-2.1/com.squareup/javapoet/1.8.0/e858dc62ef484048540d27d36f3ec2177a3fa9b1/javapoet-1.8.0.jar
+/Users/sergii/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.8.0/c4ba5371a29ac9b2ad6129b1d39ea38750043eff/gson-2.8.0.jar
