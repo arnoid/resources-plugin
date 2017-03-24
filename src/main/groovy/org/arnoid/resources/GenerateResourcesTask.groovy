@@ -2,8 +2,12 @@ package org.arnoid.resources
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.JavaFile
+import com.squareup.javapoet.ParameterizedTypeName
+import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeSpec
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -96,7 +100,7 @@ class GenerateResourcesTask extends DefaultTask {
         Set<String> layouts = readFileNames(layoutFiles)
         TypeSpec.Builder layoutsTypeBuilder = produceResourcesTypeBuilder(resourceFolder, layouts, baseAssetsFolder)
         resourcesTypeBuilder.addType(layoutsTypeBuilder.build())
-        layoutFiles
+        return layoutFiles
     }
 
     private void processResource(String resourceFolderSubFolder, String resourceClassName, String extension, String baseAssetsFolder, TypeSpec.Builder resourcesTypeBuilder) {
@@ -120,45 +124,82 @@ class GenerateResourcesTask extends DefaultTask {
             readStringNames(file, gson, strings)
         }
 
+        CodeBlock.Builder initializerBlockBuilder = CodeBlock.builder()
+
         TypeSpec.Builder stringsTypeBuilder = TypeSpec.classBuilder(resourceClassName).addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
+
+        stringsTypeBuilder.addField(produceMapOfAllResourceValuesFieldSpec(produceMapOfAllResourceValuesType()))
+
         for (String key : strings.keySet()) {
 
             stringsTypeBuilder.addField(
                     FieldSpec.builder(String.class, key, Modifier.FINAL, Modifier.STATIC, Modifier.PUBLIC).initializer('$S', strings.get(key)).build()
             )
+            addMapOfAllResourceValuesInitializerBlockLine(initializerBlockBuilder, key, strings.get(key))
         }
+
+        stringsTypeBuilder.addStaticBlock(initializerBlockBuilder.build())
+
         resourcesTypeBuilder.addType(stringsTypeBuilder.build())
     }
 
     private TypeSpec.Builder produceResourcesTypeBuilder(String resourceName, Collection<String> nameSource, String baseAssetsFolder) {
         TypeSpec.Builder dataTypeBuilder = TypeSpec.classBuilder(resourceName).addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
 
+        dataTypeBuilder.addField(produceMapOfAllResourceValuesFieldSpec(produceMapOfAllResourceValuesType()))
+
+        CodeBlock.Builder initializerBlockBuilder = CodeBlock.builder()
+
         for (String value : nameSource) {
 
             String internalPath = value.replaceAll(baseAssetsFolder, '')
 
             String fileName = internalPath.find(~/(\w+[-]?\w+)*(?:\.(\w)+?)*$/)
+            String fieldName = fileName.replaceFirst(~/\.[^\.]+$/, '').replaceAll("-", "_")
             dataTypeBuilder.addField(
-                    FieldSpec.builder(String.class, fileName.replaceFirst(~/\.[^\.]+$/, '').replaceAll("-", "_"), Modifier.FINAL, Modifier.STATIC, Modifier.PUBLIC)
+                    FieldSpec.builder(String.class, fieldName, Modifier.FINAL, Modifier.STATIC, Modifier.PUBLIC)
                             .initializer('$S', internalPath)
                             .build()
             )
+
+            addMapOfAllResourceValuesInitializerBlockLine(initializerBlockBuilder, fieldName, internalPath)
         }
 
+        dataTypeBuilder.addStaticBlock(initializerBlockBuilder.build())
+
         return dataTypeBuilder
+    }
+
+    private CodeBlock.Builder addMapOfAllResourceValuesInitializerBlockLine(CodeBlock.Builder initializerBlockBuilder, String key, String value) {
+        initializerBlockBuilder.add('$L.put($S,$S);\n', extension.mapOfAllReourceValuesFieldName, key, value)
+    }
+
+    private FieldSpec produceMapOfAllResourceValuesFieldSpec(ParameterizedTypeName mapOfAllResources) {
+        FieldSpec.builder(mapOfAllResources, extension.mapOfAllReourceValuesFieldName, Modifier.FINAL, Modifier.STATIC, Modifier.PUBLIC)
+                .initializer('new $T()', mapOfAllResources)
+                .build()
     }
 
     private TypeSpec.Builder produceResourcesTypeBuilder(String resourceName, Collection<String> nameSource) {
         TypeSpec.Builder dataTypeBuilder = TypeSpec.classBuilder(resourceName).addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
 
+        dataTypeBuilder.addField(produceMapOfAllResourceValuesFieldSpec(produceMapOfAllResourceValuesType()))
+
+        CodeBlock.Builder initializerBlockBuilder = CodeBlock.builder()
+
         for (String value : nameSource) {
 
+            def key = value.replaceFirst(~/\.[^\.]+$/, '')
             dataTypeBuilder.addField(
-                    FieldSpec.builder(String.class, value.replaceFirst(~/\.[^\.]+$/, ''), Modifier.FINAL, Modifier.STATIC, Modifier.PUBLIC)
+                    FieldSpec.builder(String.class, key, Modifier.FINAL, Modifier.STATIC, Modifier.PUBLIC)
                             .initializer('$S', value)
                             .build()
             )
+
+            addMapOfAllResourceValuesInitializerBlockLine(initializerBlockBuilder, key, value);
         }
+
+        dataTypeBuilder.addStaticBlock(initializerBlockBuilder.build())
 
         return dataTypeBuilder
     }
@@ -250,6 +291,14 @@ class GenerateResourcesTask extends DefaultTask {
         }
 
         return files
+    }
+
+    private static ParameterizedTypeName produceMapOfAllResourceValuesType() {
+        ClassName keyClassName = ClassName.get("java.lang", "String")
+        ClassName valueClassName = ClassName.get("java.lang", "String")
+        ClassName mapClassName = ClassName.get("java.util", "HashMap")
+        TypeName mapOfAllResources = ParameterizedTypeName.get(mapClassName, keyClassName, valueClassName)
+        mapOfAllResources
     }
 
 }

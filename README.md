@@ -204,6 +204,26 @@ public final class R {
     }
 }
 ```
+### _all field
+
+All classes will have `_all` `Map<String, String>` field which will contain the all the field values from generated class.
+This is done to provide support with resources processing.
+
+Ex. we have a layout xml file
+```
+<Table
+    name="tbl_team_list">
+        <Image
+            name="btn_back_1"
+            pad="10"
+            width="128"
+            height="128"
+            align="center"
+            src="@image/helmet_astronaut_logo"/>
+</Table>
+```
+Instead of doing the class field scanning and analysis, we can ask for the image from `_all` field like this `R.image._all("helmet_astronaut_logo")`
+
 
 # TODO:
 Locale support

@@ -38,6 +38,7 @@ class ResourcesExtension {
     String stringExtension = "json"
     String layoutExtension = "xml"
 
+    String mapOfAllReourceValuesFieldName = "_all"
 
     String resolution = "{resolution}"
     String[] resolutions = ["xxxhdpi", "xxhdpi", "xhdpi", "hdpi", "mdpi"]//order of replacement is important
